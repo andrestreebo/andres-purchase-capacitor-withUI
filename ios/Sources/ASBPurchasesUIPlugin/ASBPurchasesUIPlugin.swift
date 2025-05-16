@@ -29,23 +29,16 @@ public class ASBPurchasesUIPlugin: CAPPlugin {
         implementation.presentPaywall(
             offeringId: offeringId,
             viewController: root
-        ) { (result: RevenueCatUI.PaywallResult) in
-            switch result {
-            case .purchased(let customerInfo, let transaction, _):
+        ) { success, productId in
+            if success {
                 call.resolve([
                     "status": "purchased",
-                    "transactionId": transaction?.purchaseID ?? ""
+                    "transactionId": productId ?? ""
                 ])
-            case .cancelled:
-                call.resolve(["status": "cancelled"])
-            case .error(let error):
+            } else {
                 call.resolve([
-                    "status": "error",
-                    "code": "\(error.code.rawValue)",
-                    "message": error.localizedDescription
+                    "status": "cancelled"
                 ])
-            @unknown default:
-                call.reject("Unknown result")
             }
         }
     }
