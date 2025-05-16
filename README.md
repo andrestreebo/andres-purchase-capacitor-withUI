@@ -13,25 +13,66 @@ npx cap sync
 
 <docgen-index>
 
-* [`echo(...)`](#echo)
+* [`configure(...)`](#configure)
+* [`presentPaywall(...)`](#presentpaywall)
+* [Interfaces](#interfaces)
+* [Type Aliases](#type-aliases)
 
 </docgen-index>
 
 <docgen-api>
 <!--Update the source file JSDoc comments and rerun docgen to update the docs below-->
 
-### echo(...)
+### configure(...)
 
 ```typescript
-echo(options: { value: string; }) => Promise<{ value: string; }>
+configure(opts: ConfigureOptions) => Promise<void>
 ```
 
-| Param         | Type                            |
-| ------------- | ------------------------------- |
-| **`options`** | <code>{ value: string; }</code> |
-
-**Returns:** <code>Promise&lt;{ value: string; }&gt;</code>
+| Param      | Type                                                          |
+| ---------- | ------------------------------------------------------------- |
+| **`opts`** | <code><a href="#configureoptions">ConfigureOptions</a></code> |
 
 --------------------
+
+
+### presentPaywall(...)
+
+```typescript
+presentPaywall(opts: PaywallOptions) => Promise<PaywallResult>
+```
+
+| Param      | Type                                                      |
+| ---------- | --------------------------------------------------------- |
+| **`opts`** | <code><a href="#paywalloptions">PaywallOptions</a></code> |
+
+**Returns:** <code>Promise&lt;<a href="#paywallresult">PaywallResult</a>&gt;</code>
+
+--------------------
+
+
+### Interfaces
+
+
+#### ConfigureOptions
+
+| Prop         | Type                |
+| ------------ | ------------------- |
+| **`apiKey`** | <code>string</code> |
+
+
+#### PaywallOptions
+
+| Prop             | Type                |
+| ---------------- | ------------------- |
+| **`offeringId`** | <code>string</code> |
+
+
+### Type Aliases
+
+
+#### PaywallResult
+
+<code>{ status: 'purchased'; transactionId: string } | { status: 'cancelled' } | { status: 'error'; code: string; message: string }</code>
 
 </docgen-api>

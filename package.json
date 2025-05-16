@@ -1,7 +1,7 @@
 {
   "name": "asb-purchases-ui-capacitor",
   "version": "0.0.1",
-  "description": "Vibe coding the Purchase UI plugin to use Revenuecat Paywalls and Customer Center",
+  "description": "RevenueCat Purchases UI integration for Capacitor - Display paywalls and customer center",
   "main": "dist/plugin.cjs.js",
   "module": "dist/esm/index.js",
   "types": "dist/esm/index.d.ts",
@@ -27,7 +27,12 @@
   "keywords": [
     "capacitor",
     "plugin",
-    "native"
+    "native",
+    "revenuecat",
+    "purchases",
+    "paywall",
+    "subscription",
+    "in-app purchase"
   ],
   "scripts": {
     "verify": "npm run verify:ios && npm run verify:android && npm run verify:web",

@@ -13,5 +13,7 @@ Pod::Spec.new do |s|
   s.source_files = 'ios/Sources/**/*.{swift,h,m,c,cc,mm,cpp}'
   s.ios.deployment_target = '14.0'
   s.dependency 'Capacitor'
+  s.dependency 'RevenueCat', '~> 4.31'
+  s.dependency 'RevenueCatUI', '~> 2.1' # Paywall UI bundle
   s.swift_version = '5.1'
 end
