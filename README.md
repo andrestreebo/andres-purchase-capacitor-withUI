@@ -10,6 +10,17 @@ A Capacitor plugin that wraps the RevenueCat UI SDKs for iOS and Android.
 - Customization options for fonts and display settings
 - Customer Center UI for subscription management
 
+## Requirements
+
+⚠️ **Important Version Requirements**:
+
+- **iOS**: 
+  - Base SDK: 13.0+
+  - **Paywalls and Customer Center**: iOS 15.0+ only
+  - Earlier iOS versions will receive appropriate error messages
+- **Android**: API level 24+ (Android 7.0+)
+- **Capacitor**: 5.0+
+
 ## Installation
 
 ```bash
@@ -39,37 +50,34 @@ You can present a paywall using either an offering ID or a placement ID:
 ```typescript
 import { ASBPurchasesUI } from 'asb-purchases-ui-capacitor';
 
-// Present paywall with an offering ID
-const result = await ASBPurchasesUI.presentPaywall({
-  offeringId: 'premium',
-  displayCloseButton: true, // optional, defaults to true
-  fontFamily: 'Arial' // optional
-});
+// On iOS, check if the device meets the version requirements
+// For production apps, you should provide a fallback UI for iOS < 15
+try {
+  // Present paywall with an offering ID
+  const result = await ASBPurchasesUI.presentPaywall({
+    offeringId: 'premium',
+    displayCloseButton: true, // optional, defaults to true
+    fontFamily: 'Arial' // optional
+  });
 
-// Present paywall with a placement ID
-const result = await ASBPurchasesUI.presentPaywall({
-  placementId: 'home_screen',
-  displayCloseButton: true, // optional, defaults to true
-  fontFamily: 'Arial' // optional
-});
-
-// Present the default/current offering
-const result = await ASBPurchasesUI.presentPaywall();
-
-// Handle the result
-switch (result.status) {
-  case 'purchased':
-    console.log('Purchase successful!', result.transactionId);
-    break;
-  case 'restored':
-    console.log('Purchase restored!');
-    break;
-  case 'cancelled':
-    console.log('User cancelled the purchase');
-    break;
-  case 'error':
-    console.error('Error:', result.message);
-    break;
+  // Handle the result
+  switch (result.status) {
+    case 'purchased':
+      console.log('Purchase successful!', result.transactionId);
+      break;
+    case 'restored':
+      console.log('Purchase restored!');
+      break;
+    case 'cancelled':
+      console.log('User cancelled the purchase');
+      break;
+    case 'error':
+      console.error('Error:', result.message);
+      break;
+  }
+} catch (error) {
+  console.error('Failed to present paywall:', error);
+  // Show your own fallback UI on older iOS versions
 }
 ```
 
@@ -80,16 +88,21 @@ You can conditionally present a paywall if the user doesn't have a specific enti
 ```typescript
 import { ASBPurchasesUI } from 'asb-purchases-ui-capacitor';
 
-const result = await ASBPurchasesUI.presentPaywallIfNeeded({
-  requiredEntitlementId: 'premium',
-  offeringId: 'premium_offering', // optional
-  placementId: 'home_screen', // optional
-  displayCloseButton: true, // optional, defaults to true
-  fontFamily: 'Arial' // optional
-});
+try {
+  const result = await ASBPurchasesUI.presentPaywallIfNeeded({
+    requiredEntitlementId: 'premium',
+    offeringId: 'premium_offering', // optional
+    placementId: 'home_screen', // optional
+    displayCloseButton: true, // optional, defaults to true
+    fontFamily: 'Arial' // optional
+  });
 
-// If the user already has the entitlement, result.status will be 'restored'
-// Otherwise, the paywall will be presented and result will match the user's action
+  // If the user already has the entitlement, result.status will be 'restored'
+  // Otherwise, the paywall will be presented and result will match the user's action
+} catch (error) {
+  console.error('Failed to present paywall:', error);
+  // Show your own fallback UI on older iOS versions
+}
 ```
 
 ### Customer Center
@@ -99,34 +112,52 @@ Present the Customer Center for users to manage their subscriptions (iOS 15.0+ a
 ```typescript
 import { ASBPurchasesUI } from 'asb-purchases-ui-capacitor';
 
-await ASBPurchasesUI.presentCustomerCenter({
-  displayCloseButton: true, // optional, defaults to true
-  fontFamily: 'Arial' // optional
-});
+try {
+  await ASBPurchasesUI.presentCustomerCenter({
+    displayCloseButton: true, // optional, defaults to true
+    fontFamily: 'Arial' // optional
+  });
+} catch (error) {
+  console.error('Failed to present Customer Center:', error);
+  // Show your own fallback UI on older iOS versions
+}
 ```
-
-## Requirements
-
-- iOS 13.0+ (Customer Center requires iOS 15.0+)
-- Android API level 24+ (Android 7.0+)
-- Capacitor 5.0+
 
 ## RevenueCat UI Configuration
 
 To use this plugin effectively, you'll need to configure paywalls and customer center in the RevenueCat dashboard. Visit the [RevenueCat Documentation](https://www.revenuecat.com/docs/tools/paywalls) for more information.
 
-## License
+## Troubleshooting
 
-MIT
+### iOS Version Compatibility
 
-## API
+- **"PaywallViewController is only available on iOS 15.0+"**: This error occurs on devices running iOS versions below 15.0. You should provide a fallback UI for these devices.
 
-<docgen-index>
+- **Property not found**: If you see warnings about missing properties, ensure you're using the latest version of RevenueCat SDK (4.31.0+).
 
-* [`configure(...)`](#configure)
-* [`presentPaywall(...)`
+### Android Issues
 
-</docgen-index>
+- If you encounter issues with placements on Android, the plugin will automatically fall back to using offering IDs or the default offering.
+
+### RevenueCat SDK Version
+
+This plugin requires:
+- RevenueCat SDK 4.31.0+ 
+- RevenueCatUI 4.31.0+
+
+To update your RevenueCat SDK version:
+
+**iOS (in podfile):**
+```ruby
+pod 'RevenueCat', '~> 4.31.0'
+pod 'RevenueCatUI', '~> 4.31.0'
+```
+
+**Android (in build.gradle):**
+```gradle
+implementation 'com.revenuecat.purchases:purchases:6.0.0'
+implementation 'com.revenuecat.purchases:purchases-ui:6.0.0'
+```
 
 ## API Documentation
 
@@ -144,7 +175,7 @@ configure(opts: ConfigureOptions): Promise<void>
 
 ### presentPaywall(options)
 
-Present a paywall to the user.
+Present a paywall to the user. (iOS 15.0+ required)
 
 ```typescript
 presentPaywall(opts?: PaywallOptions): Promise<PaywallResult>
@@ -162,7 +193,7 @@ presentPaywall(opts?: PaywallOptions): Promise<PaywallResult>
 
 ### presentPaywallIfNeeded(options)
 
-Present a paywall only if the user doesn't have the required entitlement.
+Present a paywall only if the user doesn't have the required entitlement. (iOS 15.0+ required)
 
 ```typescript
 presentPaywallIfNeeded(opts: PaywallOptions & { requiredEntitlementId: string }): Promise<PaywallResult>
@@ -181,7 +212,7 @@ presentPaywallIfNeeded(opts: PaywallOptions & { requiredEntitlementId: string })
 
 ### presentCustomerCenter(options)
 
-Present the Customer Center for subscription management.
+Present the Customer Center for subscription management. (iOS 15.0+ required)
 
 ```typescript
 presentCustomerCenter(opts?: CustomerCenterOptions): Promise<void>
@@ -205,3 +236,7 @@ type PaywallResult =
   | { status: 'cancelled' }
   | { status: 'error'; code: string; message: string }
 ```
+
+## License
+
+MIT

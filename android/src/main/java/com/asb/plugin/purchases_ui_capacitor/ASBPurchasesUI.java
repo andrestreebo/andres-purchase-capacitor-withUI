@@ -29,25 +29,58 @@ public class ASBPurchasesUI {
     public Intent getPaywallIntent(Activity activity, @Nullable String offeringId, @Nullable String placementId, boolean displayCloseButton, @Nullable String fontFamily) {
         Intent intent;
         
-        if (placementId != null) {
-            intent = PaywallActivity.intentForPaywall(activity, placementId);
-        } else if (offeringId != null) {
-            intent = PaywallActivity.intentForPaywall(activity, offeringId);
-        } else {
-            intent = PaywallActivity.intentForPaywall(activity);
+        try {
+            if (placementId != null) {
+                // Try to use placement ID if available in API
+                try {
+                    intent = PaywallActivity.intentForPaywall(activity, placementId);
+                } catch (Exception e) {
+                    Log.w("ASBPurchasesUI", "Placement ID not supported, falling back to offering ID or default: " + e.getMessage());
+                    if (offeringId != null) {
+                        intent = PaywallActivity.intentForPaywall(activity, offeringId);
+                    } else {
+                        intent = PaywallActivity.intentForPaywall(activity);
+                    }
+                }
+            } else if (offeringId != null) {
+                intent = PaywallActivity.intentForPaywall(activity, offeringId);
+            } else {
+                intent = PaywallActivity.intentForPaywall(activity);
+            }
+            
+            // Try to set the dismiss button property
+            try {
+                // Check for the correct property name
+                // First try SHOULD_DISPLAY_DISMISS_BUTTON (newer versions)
+                intent.putExtra(PaywallActivity.SHOULD_DISPLAY_DISMISS_BUTTON, displayCloseButton);
+            } catch (Exception e) {
+                // If that fails, try alternative property names
+                Log.w("ASBPurchasesUI", "SHOULD_DISPLAY_DISMISS_BUTTON not found, trying alternatives: " + e.getMessage());
+                try {
+                    intent.putExtra("shouldShowDismissButton", displayCloseButton);
+                } catch (Exception e2) {
+                    Log.w("ASBPurchasesUI", "Alternative property not found either: " + e2.getMessage());
+                }
+            }
+            
+            if (fontFamily != null) {
+                try {
+                    PaywallFontFamily paywallFontFamily = new PaywallFontFamily(
+                        Collections.singletonList(PaywallFont.ResourceFont.Companion.createFromFontFamily(fontFamily))
+                    );
+                    CustomParcelizableFontProvider fontProvider = new CustomParcelizableFontProvider(paywallFontFamily);
+                    intent.putExtra(PaywallActivity.FONT_PROVIDER_KEY, fontProvider);
+                } catch (Exception e) {
+                    Log.w("ASBPurchasesUI", "Could not set font family: " + e.getMessage());
+                }
+            }
+            
+            return intent;
+        } catch (Exception e) {
+            Log.e("ASBPurchasesUI", "Error creating paywall intent: " + e.getMessage());
+            // Return a simple intent as fallback
+            return new Intent(activity, PaywallActivity.class);
         }
-        
-        intent.putExtra(PaywallActivity.SHOULD_DISPLAY_DISMISS_BUTTON, displayCloseButton);
-        
-        if (fontFamily != null) {
-            PaywallFontFamily paywallFontFamily = new PaywallFontFamily(
-                Collections.singletonList(PaywallFont.ResourceFont.Companion.createFromFontFamily(fontFamily))
-            );
-            CustomParcelizableFontProvider fontProvider = new CustomParcelizableFontProvider(paywallFontFamily);
-            intent.putExtra(PaywallActivity.FONT_PROVIDER_KEY, fontProvider);
-        }
-        
-        return intent;
     }
     
     @ExperimentalPreviewRevenueCatUIPurchasesAPI
@@ -77,19 +110,39 @@ public class ASBPurchasesUI {
     
     @ExperimentalPreviewRevenueCatUIPurchasesAPI
     public Intent getCustomerCenterIntent(Activity activity, boolean displayCloseButton, @Nullable String fontFamily) {
-        Intent intent = CustomerCenterActivity.createIntent(activity);
-        
-        intent.putExtra(CustomerCenterActivity.SHOULD_DISPLAY_DISMISS_BUTTON, displayCloseButton);
-        
-        if (fontFamily != null) {
-            PaywallFontFamily paywallFontFamily = new PaywallFontFamily(
-                Collections.singletonList(PaywallFont.ResourceFont.Companion.createFromFontFamily(fontFamily))
-            );
-            CustomParcelizableFontProvider fontProvider = new CustomParcelizableFontProvider(paywallFontFamily);
-            intent.putExtra(CustomerCenterActivity.FONT_PROVIDER_KEY, fontProvider);
+        try {
+            Intent intent = CustomerCenterActivity.createIntent(activity);
+            
+            // Try to set the dismiss button property
+            try {
+                intent.putExtra(CustomerCenterActivity.SHOULD_DISPLAY_DISMISS_BUTTON, displayCloseButton);
+            } catch (Exception e) {
+                Log.w("ASBPurchasesUI", "SHOULD_DISPLAY_DISMISS_BUTTON not found for CustomerCenter: " + e.getMessage());
+                try {
+                    intent.putExtra("shouldShowDismissButton", displayCloseButton);
+                } catch (Exception e2) {
+                    Log.w("ASBPurchasesUI", "Alternative property not found either for CustomerCenter: " + e2.getMessage());
+                }
+            }
+            
+            if (fontFamily != null) {
+                try {
+                    PaywallFontFamily paywallFontFamily = new PaywallFontFamily(
+                        Collections.singletonList(PaywallFont.ResourceFont.Companion.createFromFontFamily(fontFamily))
+                    );
+                    CustomParcelizableFontProvider fontProvider = new CustomParcelizableFontProvider(paywallFontFamily);
+                    intent.putExtra(CustomerCenterActivity.FONT_PROVIDER_KEY, fontProvider);
+                } catch (Exception e) {
+                    Log.w("ASBPurchasesUI", "Could not set font family for CustomerCenter: " + e.getMessage());
+                }
+            }
+            
+            return intent;
+        } catch (Exception e) {
+            Log.e("ASBPurchasesUI", "Error creating CustomerCenter intent: " + e.getMessage());
+            // Return a simple intent as fallback
+            return new Intent(activity, CustomerCenterActivity.class);
         }
-        
-        return intent;
     }
     
     public interface EntitlementCheckCallback {

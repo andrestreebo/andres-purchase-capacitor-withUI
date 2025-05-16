@@ -25,39 +25,43 @@ public class ASBPurchasesUIPlugin: CAPPlugin {
             call.reject("No view controller available"); return
         }
         
-        let offeringId = call.getString("offeringId")
-        let placementId = call.getString("placementId")
-        let displayCloseButton = call.getBool("displayCloseButton", true)
-        let fontFamily = call.getString("fontFamily")
-        
-        // Check if at least one of offeringId or placementId is provided
-        if offeringId == nil && placementId == nil {
-            // If none provided, will use current offering
-            print("No offeringId or placementId provided, using current offering")
-        }
-
-        implementation.presentPaywall(
-            offeringId: offeringId,
-            placementId: placementId,
-            displayCloseButton: displayCloseButton,
-            fontName: fontFamily,
-            viewController: root
-        ) { success, productId, restored in
-            if success {
-                call.resolve([
-                    "status": "purchased",
-                    "transactionId": productId ?? ""
-                ])
-            } else if restored {
-                call.resolve([
-                    "status": "restored",
-                    "transactionId": productId
-                ])
-            } else {
-                call.resolve([
-                    "status": "cancelled"
-                ])
+        if #available(iOS 15.0, *) {
+            let offeringId = call.getString("offeringId")
+            let placementId = call.getString("placementId")
+            let displayCloseButton = call.getBool("displayCloseButton", true)
+            let fontFamily = call.getString("fontFamily")
+            
+            // Check if at least one of offeringId or placementId is provided
+            if offeringId == nil && placementId == nil {
+                // If none provided, will use current offering
+                print("No offeringId or placementId provided, using current offering")
             }
+
+            implementation.presentPaywall(
+                offeringId: offeringId,
+                placementId: placementId,
+                displayCloseButton: displayCloseButton,
+                fontName: fontFamily,
+                viewController: root
+            ) { success, productId, restored in
+                if success {
+                    call.resolve([
+                        "status": "purchased",
+                        "transactionId": productId ?? ""
+                    ])
+                } else if restored {
+                    call.resolve([
+                        "status": "restored",
+                        "transactionId": productId
+                    ])
+                } else {
+                    call.resolve([
+                        "status": "cancelled"
+                    ])
+                }
+            }
+        } else {
+            call.reject("PaywallViewController is only available on iOS 15.0+")
         }
     }
     
@@ -70,34 +74,38 @@ public class ASBPurchasesUIPlugin: CAPPlugin {
             call.reject("requiredEntitlementId missing"); return
         }
         
-        let offeringId = call.getString("offeringId")
-        let placementId = call.getString("placementId")
-        let displayCloseButton = call.getBool("displayCloseButton", true)
-        let fontFamily = call.getString("fontFamily")
-        
-        implementation.presentPaywallIfNeeded(
-            offeringId: offeringId,
-            placementId: placementId,
-            requiredEntitlementId: requiredEntitlementId,
-            displayCloseButton: displayCloseButton,
-            fontName: fontFamily,
-            viewController: root
-        ) { success, productId, restored in
-            if success {
-                call.resolve([
-                    "status": "purchased",
-                    "transactionId": productId ?? ""
-                ])
-            } else if restored {
-                call.resolve([
-                    "status": "restored",
-                    "transactionId": productId
-                ])
-            } else {
-                call.resolve([
-                    "status": "cancelled"
-                ])
+        if #available(iOS 15.0, *) {
+            let offeringId = call.getString("offeringId")
+            let placementId = call.getString("placementId")
+            let displayCloseButton = call.getBool("displayCloseButton", true)
+            let fontFamily = call.getString("fontFamily")
+            
+            implementation.presentPaywallIfNeeded(
+                offeringId: offeringId,
+                placementId: placementId,
+                requiredEntitlementId: requiredEntitlementId,
+                displayCloseButton: displayCloseButton,
+                fontName: fontFamily,
+                viewController: root
+            ) { success, productId, restored in
+                if success {
+                    call.resolve([
+                        "status": "purchased",
+                        "transactionId": productId ?? ""
+                    ])
+                } else if restored {
+                    call.resolve([
+                        "status": "restored",
+                        "transactionId": productId
+                    ])
+                } else {
+                    call.resolve([
+                        "status": "cancelled"
+                    ])
+                }
             }
+        } else {
+            call.reject("PaywallViewController is only available on iOS 15.0+")
         }
     }
     
