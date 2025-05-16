@@ -19,16 +19,12 @@ import ObjectiveC
                 // Store the delegate handler to prevent it from being deallocated
                 objc_setAssociatedObject(paywallVC, UnsafeRawPointer(bitPattern: 1)!, delegateHandler, .OBJC_ASSOCIATION_RETAIN)
                 
-                // Set close button - check if the property exists
-                if paywallVC.responds(to: #selector(setter: PaywallViewController.shouldShowDismissButton)) {
-                    paywallVC.shouldShowDismissButton = displayCloseButton
-                }
+                // Set close button
+                paywallVC.shouldShowDismissButton = displayCloseButton
                 
                 // Set custom font if provided
                 if let fontName = fontName {
-                    if paywallVC.responds(to: #selector(setter: PaywallViewController.fonts)) {
-                        paywallVC.fonts = CustomPaywallFontProvider(fontName: fontName)
-                    }
+                    paywallVC.fontProvider = CustomPaywallFontProvider(fontName: fontName)
                 }
                 
                 viewController.present(paywallVC, animated: true)
@@ -36,8 +32,7 @@ import ObjectiveC
         }
         
         if let placementId = placementId {
-            // Handle placement ID differently as the placement API might not exist in Offerings
-            // Use getOfferings and then find the appropriate offering
+            // Use getOfferings and find the appropriate offering
             Purchases.shared.getOfferings { offerings, error in
                 if let error = error {
                     print("Error fetching offerings: \(error.localizedDescription)")
@@ -46,19 +41,12 @@ import ObjectiveC
                 }
                 
                 if let offerings = offerings {
-                    // Since placement might not be directly accessible, find offering by ID
-                    var foundOffering: Offering?
-                    
-                    // Try to access a placement if the API exists
+                    // Try to get offering by ID first
                     if let offering = offerings.offering(identifier: placementId) {
-                        foundOffering = offering
+                        displayPaywall(offering: offering)
                     } else if let current = offerings.current {
                         // Fallback to current offering
-                        foundOffering = current
-                    }
-                    
-                    if let offering = foundOffering {
-                        displayPaywall(offering: offering)
+                        displayPaywall(offering: current)
                     } else {
                         print("No offering found for placement: \(placementId)")
                         completion(false, nil, false)
@@ -136,60 +124,44 @@ import ObjectiveC
     @available(iOS 15.0, *)
     @objc public func presentCustomerCenter(displayCloseButton: Bool, fontName: String?, viewController: UIViewController, completion: @escaping () -> Void) {
         DispatchQueue.main.async {
-            // Check if CustomerCenterViewController is available
-            if NSClassFromString("RevenueCatUI.CustomerCenterViewController") != nil {
-                let customerCenterVC = CustomerCenterViewController()
+            let customerCenterVC = CustomerCenterViewController()
+            
+            // Set custom font if provided
+            if let fontName = fontName {
+                customerCenterVC.fontProvider = CustomPaywallFontProvider(fontName: fontName)
+            }
+            
+            // Set close button visibility
+            customerCenterVC.shouldShowDismissButton = displayCloseButton
+            
+            // Create a custom delegate to handle dismiss
+            class CustomDismissHandler: NSObject, CustomerCenterViewControllerDelegate {
+                private let dismissCallback: () -> Void
                 
-                // Set custom font if provided and if the property exists
-                if let fontName = fontName, customerCenterVC.responds(to: #selector(setter: CustomerCenterViewController.fonts)) {
-                    customerCenterVC.fonts = CustomPaywallFontProvider(fontName: fontName)
+                init(dismissCallback: @escaping () -> Void) {
+                    self.dismissCallback = dismissCallback
+                    super.init()
                 }
                 
-                // Set close button visibility if the property exists
-                if customerCenterVC.responds(to: #selector(setter: CustomerCenterViewController.shouldShowDismissButton)) {
-                    customerCenterVC.shouldShowDismissButton = displayCloseButton
+                func customerCenterViewControllerDidDismiss(_ customerCenterViewController: CustomerCenterViewController) {
+                    dismissCallback()
                 }
-                
-                // Create a custom delegate to handle dismiss
-                class CustomDismissHandler: NSObject {
-                    private let dismissCallback: () -> Void
-                    
-                    init(dismissCallback: @escaping () -> Void) {
-                        self.dismissCallback = dismissCallback
-                        super.init()
-                    }
-                    
-                    @objc func customerCenterViewControllerDidDismiss(_ customerCenterViewController: UIViewController) {
-                        dismissCallback()
-                    }
-                }
-                
-                let dismissHandler = CustomDismissHandler {
-                    completion()
-                }
-                objc_setAssociatedObject(customerCenterVC, UnsafeRawPointer(bitPattern: 2)!, dismissHandler, .OBJC_ASSOCIATION_RETAIN)
-                
-                // Try to set the delegate if the property exists
-                if customerCenterVC.responds(to: #selector(setter: CustomerCenterViewController.delegate)) {
-                    let selectorName = "setDelegate:"
-                    let selector = NSSelectorFromString(selectorName)
-                    if customerCenterVC.responds(to: selector) {
-                        customerCenterVC.perform(selector, with: dismissHandler)
-                    }
-                }
-                
-                viewController.present(customerCenterVC, animated: true)
-            } else {
-                print("CustomerCenterViewController is not available")
+            }
+            
+            let dismissHandler = CustomDismissHandler {
                 completion()
             }
+            objc_setAssociatedObject(customerCenterVC, UnsafeRawPointer(bitPattern: 2)!, dismissHandler, .OBJC_ASSOCIATION_RETAIN)
+            customerCenterVC.delegate = dismissHandler
+            
+            viewController.present(customerCenterVC, animated: true)
         }
     }
 }
 
 // Helper delegate handler to manage PaywallViewController delegate methods
 @available(iOS 15.0, *)
-private class PaywallDelegateHandler: NSObject {
+private class PaywallDelegateHandler: NSObject, PaywallViewControllerDelegate {
     private let completion: (Bool, String?, Bool) -> Void
     
     init(completion: @escaping (Bool, String?, Bool) -> Void) {
@@ -197,20 +169,20 @@ private class PaywallDelegateHandler: NSObject {
         super.init()
     }
     
-    @objc func paywallViewController(_ controller: PaywallViewController, didFinishPurchasingWith customerInfo: CustomerInfo, transaction: StoreTransaction?) {
+    func paywallViewController(_ controller: PaywallViewController, didFinishPurchasingWith customerInfo: CustomerInfo, transaction: StoreTransaction?) {
         completion(true, transaction?.productIdentifier, false)
         controller.dismiss(animated: true)
     }
     
-    @objc func paywallViewControllerDidCancel(_ controller: PaywallViewController) {
+    func paywallViewControllerDidCancel(_ controller: PaywallViewController) {
         completion(false, nil, false)
     }
     
-    @objc func paywallViewController(_ controller: PaywallViewController, didFailWith error: NSError) {
+    func paywallViewController(_ controller: PaywallViewController, didFailWith error: NSError) {
         completion(false, nil, false)
     }
     
-    @objc func paywallViewController(_ controller: PaywallViewController, didFinishRestoringWith customerInfo: CustomerInfo) {
+    func paywallViewController(_ controller: PaywallViewController, didFinishRestoringWith customerInfo: CustomerInfo) {
         completion(false, nil, true)
         controller.dismiss(animated: true)
     }
