@@ -1,6 +1,7 @@
 import Foundation
 import Capacitor
 import RevenueCat
+import RevenueCatUI
 
 /**
  * Please read the Capacitor iOS Plugin Development Guide
