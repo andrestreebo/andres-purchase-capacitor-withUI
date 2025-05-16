@@ -1,6 +1,5 @@
 import Foundation
 import RevenueCat
-import RevenueCatUI
 
 @objc public class ASBPurchasesUI: NSObject {
     @objc public func configure(apiKey: String) {
