@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 import Capacitor
 import RevenueCat
 import RevenueCatUI
@@ -28,7 +29,7 @@ public class ASBPurchasesUIPlugin: CAPPlugin {
         implementation.presentPaywall(
             offeringId: offeringId,
             viewController: root
-        ) { result in
+        ) { (result: RevenueCatUI.PaywallResult) in
             switch result {
             case .purchased(let customerInfo, let transaction, _):
                 call.resolve([

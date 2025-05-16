@@ -12,8 +12,10 @@ Pod::Spec.new do |s|
   s.source = { :git => package['repository']['url'], :tag => s.version.to_s }
   s.source_files = 'ios/Sources/**/*.{swift,h,m,c,cc,mm,cpp}'
   s.ios.deployment_target = '14.0'
+  s.framework = 'UIKit'
   s.dependency 'Capacitor'
   s.dependency 'RevenueCat', '>= 4.31'
   s.dependency 'RevenueCatUI', '>= 4.31'
+  s.static_framework = true
   s.swift_version = '5.1'
 end
