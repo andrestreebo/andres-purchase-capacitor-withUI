@@ -6,17 +6,23 @@ import com.getcapacitor.*;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.annotation.ActivityCallback;
 import com.revenuecat.purchases.Purchases;
+import com.revenuecat.purchases.ui.revenuecatui.ExperimentalPreviewRevenueCatUIPurchasesAPI;
+import com.revenuecat.purchases.ui.revenuecatui.activity.CustomerCenterActivity;
 import com.revenuecat.purchases.ui.revenuecatui.activity.PaywallActivity;
 import com.revenuecat.purchases.ui.revenuecatui.activity.PaywallResult;
 import org.json.JSONObject;
 
 @CapacitorPlugin(
     name = "ASBPurchasesUI",
-    requestCodes = {ASBPurchasesUIPlugin.PAYWALL_REQ}
+    requestCodes = {
+        ASBPurchasesUIPlugin.PAYWALL_REQ,
+        ASBPurchasesUIPlugin.CUSTOMER_CENTER_REQ
+    }
 )
 public class ASBPurchasesUIPlugin extends Plugin {
     
     static final int PAYWALL_REQ = 7117;
+    static final int CUSTOMER_CENTER_REQ = 7118;
     private ASBPurchasesUI implementation = new ASBPurchasesUI();
 
     @PluginMethod
@@ -37,11 +43,41 @@ public class ASBPurchasesUIPlugin extends Plugin {
         call.resolve();
     }
 
+    @OptIn(markerClass = ExperimentalPreviewRevenueCatUIPurchasesAPI.class)
     @PluginMethod
     public void presentPaywall(PluginCall call) {
+        // Save the call to handle the result
+        saveCall(call);
+        
+        // Get the activity
+        Activity activity = getActivity();
+        if (activity == null) {
+            call.reject("Activity not available");
+            return;
+        }
+        
         String offeringId = call.getString("offeringId");
-        if (offeringId == null) {
-            call.reject("offeringId missing");
+        String placementId = call.getString("placementId");
+        boolean displayCloseButton = call.getBoolean("displayCloseButton", true);
+        String fontFamily = call.getString("fontFamily");
+        
+        // Start the paywall activity
+        Intent intent = implementation.getPaywallIntent(
+            activity, 
+            offeringId,
+            placementId,
+            displayCloseButton,
+            fontFamily
+        );
+        startActivityForResult(call, intent, PAYWALL_REQ);
+    }
+    
+    @OptIn(markerClass = ExperimentalPreviewRevenueCatUIPurchasesAPI.class)
+    @PluginMethod
+    public void presentPaywallIfNeeded(PluginCall call) {
+        String requiredEntitlementId = call.getString("requiredEntitlementId");
+        if (requiredEntitlementId == null) {
+            call.reject("requiredEntitlementId missing");
             return;
         }
         
@@ -55,9 +91,55 @@ public class ASBPurchasesUIPlugin extends Plugin {
             return;
         }
         
-        // Start the paywall activity
-        Intent intent = implementation.getPaywallIntent(activity, offeringId);
-        startActivityForResult(call, intent, PAYWALL_REQ);
+        String offeringId = call.getString("offeringId");
+        String placementId = call.getString("placementId");
+        boolean displayCloseButton = call.getBoolean("displayCloseButton", true);
+        String fontFamily = call.getString("fontFamily");
+        
+        implementation.checkEntitlementAndGetPaywallIntent(
+            activity,
+            offeringId,
+            placementId,
+            requiredEntitlementId,
+            displayCloseButton,
+            fontFamily,
+            (hasEntitlement, intent) -> {
+                if (hasEntitlement) {
+                    // User already has the entitlement, no need to show paywall
+                    JSObject ret = new JSObject();
+                    ret.put("status", "restored");
+                    call.resolve(ret);
+                } else {
+                    // User doesn't have the entitlement, show paywall
+                    startActivityForResult(call, intent, PAYWALL_REQ);
+                }
+            }
+        );
+    }
+    
+    @OptIn(markerClass = ExperimentalPreviewRevenueCatUIPurchasesAPI.class)
+    @PluginMethod
+    public void presentCustomerCenter(PluginCall call) {
+        // Save the call to handle the result
+        saveCall(call);
+        
+        // Get the activity
+        Activity activity = getActivity();
+        if (activity == null) {
+            call.reject("Activity not available");
+            return;
+        }
+        
+        boolean displayCloseButton = call.getBoolean("displayCloseButton", true);
+        String fontFamily = call.getString("fontFamily");
+        
+        // Start the customer center activity
+        Intent intent = implementation.getCustomerCenterIntent(
+            activity,
+            displayCloseButton,
+            fontFamily
+        );
+        startActivityForResult(call, intent, CUSTOMER_CENTER_REQ);
     }
 
     @ActivityCallback
@@ -72,6 +154,11 @@ public class ASBPurchasesUIPlugin extends Plugin {
                 switch (result.getPurchaseStatus()) {
                     case PURCHASED:
                         ret.put("status", "purchased");
+                        ret.put("transactionId", result.getStoreTransaction() != null ? 
+                                result.getStoreTransaction().getOrderId() : "");
+                        break;
+                    case RESTORED:
+                        ret.put("status", "restored");
                         ret.put("transactionId", result.getStoreTransaction() != null ? 
                                 result.getStoreTransaction().getOrderId() : "");
                         break;
@@ -95,5 +182,11 @@ public class ASBPurchasesUIPlugin extends Plugin {
             ret.put("status", "cancelled");
             call.resolve(ret);
         }
+    }
+    
+    @ActivityCallback
+    private void handleCustomerCenterResult(PluginCall call, int resultCode, Intent data) {
+        if (call == null) return;
+        call.resolve();
     }
 }
