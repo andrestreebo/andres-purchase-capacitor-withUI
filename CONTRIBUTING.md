@@ -1,52 +1,69 @@
-# Contributing
+# Contributing to @revenuecat/purchases-capacitor-ui
 
-This guide provides instructions for contributing to this Capacitor plugin.
+Thank you for your interest in contributing to the RevenueCat Capacitor UI SDK!
 
-## Developing
+## Development Setup
 
-### Local Setup
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/andrestreebo/andres-purchase-capacitor-withUI.git
+   cd andres-purchase-capacitor-withUI
+   ```
 
-1. Fork and clone the repo.
-1. Install the dependencies.
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-    ```shell
-    npm install
-    ```
+3. Build the project:
+   ```bash
+   npm run build
+   ```
 
-1. Install SwiftLint if you're on macOS.
+## Testing Your Changes
 
-    ```shell
-    brew install swiftlint
-    ```
+You can test your changes in a Capacitor app by linking the package locally:
 
-### Scripts
+```bash
+# In the plugin directory
+npm link
 
-#### `npm run build`
-
-Build the plugin web assets and generate plugin API documentation using [`@capacitor/docgen`](https://github.com/ionic-team/capacitor-docgen).
-
-It will compile the TypeScript code from `src/` into ESM JavaScript in `dist/esm/`. These files are used in apps with bundlers when your plugin is imported.
-
-Then, Rollup will bundle the code into a single file at `dist/plugin.js`. This file is used in apps without bundlers by including it as a script in `index.html`.
-
-#### `npm run verify`
-
-Build and validate the web and native projects.
-
-This is useful to run in CI to verify that the plugin builds for all platforms.
-
-#### `npm run lint` / `npm run fmt`
-
-Check formatting and code quality, autoformat/autofix if possible.
-
-This template is integrated with ESLint, Prettier, and SwiftLint. Using these tools is completely optional, but the [Capacitor Community](https://github.com/capacitor-community/) strives to have consistent code style and structure for easier cooperation.
-
-## Publishing
-
-There is a `prepublishOnly` hook in `package.json` which prepares the plugin before publishing, so all you need to do is run:
-
-```shell
-npm publish
+# In your app directory
+npm link @revenuecat/purchases-capacitor-ui
+npx cap sync
 ```
 
-> **Note**: The [`files`](https://docs.npmjs.com/cli/v7/configuring-npm/package-json#files) array in `package.json` specifies which files get published. If you rename files/directories or add files elsewhere, you may need to update it.
+## Code Style
+
+We use ESLint and Prettier to enforce code style. Before submitting a PR, make sure your code passes the linting checks:
+
+```bash
+npm run lint
+npm run fmt # to automatically fix issues
+```
+
+## Submitting a Pull Request
+
+1. Create a branch for your changes:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+2. Make your changes and commit them with clear, descriptive messages.
+
+3. Push your branch to GitHub:
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+
+4. Open a pull request against the main branch.
+
+## Release Process
+
+The release process is managed by RevenueCat team members. If you're a contributor, you don't need to worry about this part.
+
+## Questions?
+
+If you have any questions about contributing, please contact the RevenueCat team.
+
+Thank you for your contribution! 

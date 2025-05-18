@@ -1,9 +1,8 @@
 ext {
-    junitVersion = project.hasProperty('junitVersion') ? rootProject.ext.junitVersion : '4.13.2'
-    androidxAppCompatVersion = project.hasProperty('androidxAppCompatVersion') ? rootProject.ext.androidxAppCompatVersion : '1.7.0'
-    androidxJunitVersion = project.hasProperty('androidxJunitVersion') ? rootProject.ext.androidxJunitVersion : '1.2.1'
-    androidxEspressoCoreVersion = project.hasProperty('androidxEspressoCoreVersion') ? rootProject.ext.androidxEspressoCoreVersion : '3.6.1'
-    kotlinVersion = project.hasProperty('kotlinVersion') ? rootProject.ext.kotlinVersion : '1.9.0'
+    junitVersion = project.hasProperty('junitVersion') ? project.junitVersion : '4.13.2'
+    androidxAppCompatVersion = project.hasProperty('androidxAppCompatVersion') ? project.androidxAppCompatVersion : '1.6.1'
+    androidxJunitVersion = project.hasProperty('androidxJunitVersion') ? project.androidxJunitVersion : '1.1.5'
+    androidxEspressoCoreVersion = project.hasProperty('androidxEspressoCoreVersion') ? project.androidxEspressoCoreVersion : '3.5.1'
 }
 
 buildscript {
@@ -12,20 +11,18 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.7.2'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.0"
+        classpath 'com.android.tools.build:gradle:8.0.0'
     }
 }
 
 apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
 
 android {
-    namespace "com.asb.plugin.purchases_ui_capacitor"
-    compileSdk project.hasProperty('compileSdkVersion') ? rootProject.ext.compileSdkVersion : 34
+    namespace "com.revenuecat.purchases.capacitor.ui"
+    compileSdkVersion project.hasProperty('compileSdkVersion') ? project.compileSdkVersion.toInteger() : 33
     defaultConfig {
-        minSdkVersion project.hasProperty('minSdkVersion') ? rootProject.ext.minSdkVersion : 21
-        targetSdkVersion project.hasProperty('targetSdkVersion') ? rootProject.ext.targetSdkVersion : 34
+        minSdkVersion project.hasProperty('minSdkVersion') ? project.minSdkVersion.toInteger() : 24
+        targetSdkVersion project.hasProperty('targetSdkVersion') ? project.targetSdkVersion.toInteger() : 33
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -36,18 +33,12 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    buildFeatures {
-        compose true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion "1.5.2"
-    }
     lintOptions {
         abortOnError false
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 }
 
@@ -56,21 +47,16 @@ repositories {
     mavenCentral()
 }
 
-
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation project(':capacitor-android')
     implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
-    implementation "com.revenuecat.purchases:purchases:9.0.0"
-    implementation "com.revenuecat.purchases:purchases-ui:9.0.0"
+    implementation project(':capacitor-android')
     
-    // Jetpack Compose dependencies
-    implementation "androidx.compose.ui:ui:1.5.4"
-    implementation "androidx.compose.material:material:1.5.4"
-    implementation "androidx.compose.ui:ui-tooling-preview:1.5.4"
-    debugImplementation "androidx.compose.ui:ui-tooling:1.5.4"
+    // RevenueCat dependencies
+    implementation "com.revenuecat.purchases:purchases-hybrid-common-ui:13.32.0"
     
+    // Test dependencies
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
-}
+} 

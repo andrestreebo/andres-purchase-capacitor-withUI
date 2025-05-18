@@ -1,52 +1,100 @@
-export interface ConfigureOptions { apiKey: string }
-export interface PaywallOptions { 
-  offeringId?: string;
-  placementId?: string;
-  displayCloseButton?: boolean;
+export interface PaywallCallbacks {
+  onPresented?: () => void;
+  onDismissed?: () => void;
+  onError?: (error: PaywallError) => void;
+  onPurchaseStarted?: () => void;
+  onPurchaseCompleted?: () => void;
+  onPurchaseError?: (error: PaywallError) => void;
+  onRestoreStarted?: () => void;
+  onRestoreCompleted?: () => void;
+  onRestoreError?: (error: PaywallError) => void;
+}
+
+export interface CustomerCenterCallbacks {
+  onDismissed?: () => void;
+  onRestoreStarted?: () => void;
+  onRestoreCompleted?: () => void;
+  onRestoreError?: (error: PaywallError) => void;
+  onError?: (error: PaywallError) => void;
+}
+
+export interface PaywallError {
+  code: string;
+  message: string;
+}
+
+export interface PaywallResult {
+  status: 'purchased' | 'restored' | 'cancelled' | 'error';
+  transactionId?: string;
+  error?: PaywallError;
+}
+
+export interface Overrides {
+  // Font options
   fontFamily?: string;
-}
-
-export interface CustomerCenterOptions {
+  titleFontSize?: number;
+  bodyFontSize?: number;
+  captionFontSize?: number;
+  
+  // Colors
+  backgroundColor?: string;
+  primaryTextColor?: string;
+  secondaryTextColor?: string;
+  accentColor?: string;
+  
+  // Button options
+  primaryButtonBackgroundColor?: string;
+  primaryButtonTextColor?: string;
+  secondaryButtonBackgroundColor?: string;
+  secondaryButtonTextColor?: string;
+  
+  // Text overrides
+  title?: string;
+  subtitle?: string;
+  callToAction?: string;
+  restoreButtonText?: string;
+  
+  // Display options
   displayCloseButton?: boolean;
-  fontFamily?: string;
 }
 
-export type PaywallResult =
-  | { status: 'purchased'; transactionId: string }
-  | { status: 'restored'; transactionId?: string }
-  | { status: 'cancelled' }
-  | { status: 'error'; code: string; message: string }
-
-/**
- * ASB Purchases UI Plugin interface
- * 
- * Note: Paywall and Customer Center features require iOS 15.0+ on Apple devices.
- * Android requires API level 24+ (Android 7.0+)
- */
-export interface ASBPurchasesUIPlugin {
-  /**
-   * Configure RevenueCat SDK with your API key
-   */
-  configure(opts: ConfigureOptions): Promise<void>;
-  
-  /**
-   * Present a paywall to the user
-   * 
-   * Note: Requires iOS 15.0+ on Apple devices
-   */
-  presentPaywall(opts?: PaywallOptions): Promise<PaywallResult>;
-  
-  /**
-   * Present a paywall only if the user doesn't have the required entitlement
-   * 
-   * Note: Requires iOS 15.0+ on Apple devices
-   */
-  presentPaywallIfNeeded(opts: PaywallOptions & { requiredEntitlementId: string }): Promise<PaywallResult>;
-  
-  /**
-   * Present the Customer Center for subscription management
-   * 
-   * Note: Requires iOS 15.0+ on Apple devices
-   */
-  presentCustomerCenter(opts?: CustomerCenterOptions): Promise<void>;
+export interface PaywallArgs {
+  offeringIdentifier?: string;
+  requiredEntitlementIdentifier?: string;
+  overrides?: Overrides;
+  callbacks?: PaywallCallbacks;
 }
+
+export interface CustomerCenterArgs {
+  callbacks?: CustomerCenterCallbacks;
+}
+
+export interface RevenueCatUIPlugin {
+  /**
+   * Always shows the configured paywall
+   * @param args The optional configuration for the paywall
+   * @returns Promise that resolves to a PaywallResult
+   */
+  presentPaywall(args?: PaywallArgs): Promise<PaywallResult>;
+
+  /**
+   * Shows the paywall only if the user doesn't own the required entitlement
+   * @param args Configuration for the paywall including the required entitlement
+   * @returns Promise that resolves to a PaywallResult or null if not presented
+   */
+  presentPaywallIfNeeded(args: PaywallArgs): Promise<PaywallResult | null>;
+
+  /**
+   * Opens the self-service Customer Center
+   * @param args The optional configuration for the Customer Center
+   * @returns Promise that resolves when the Customer Center is presented
+   */
+  presentCustomerCenter(args?: CustomerCenterArgs): Promise<void>;
+
+  /**
+   * Supply style / text overrides before launching any paywall
+   * @param overrides The style and text overrides to apply
+   * @returns Promise that resolves when the overrides are set
+   */
+  setPaywallOverrides(overrides: Overrides): Promise<void>;
+} 

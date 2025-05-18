@@ -1,10 +1,10 @@
 import { registerPlugin } from '@capacitor/core';
 
-import type { ASBPurchasesUIPlugin } from './definitions';
+import type { RevenueCatUIPlugin } from './definitions';
 
-const ASBPurchasesUI = registerPlugin<ASBPurchasesUIPlugin>('ASBPurchasesUI', {
-  web: () => import('./web').then((m) => new m.ASBPurchasesUIWeb()),
+const RevenueCatUI = registerPlugin<RevenueCatUIPlugin>('RevenueCatUI', {
+  web: () => import('./web').then(m => new m.RevenueCatUIWeb()),
 });
 
 export * from './definitions';
-export { ASBPurchasesUI };
+export { RevenueCatUI }; 

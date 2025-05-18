@@ -4,7 +4,7 @@ export default {
     {
       file: 'dist/plugin.js',
       format: 'iife',
-      name: 'capacitorASBPurchasesUI',
+      name: 'capacitorRevenueCatUI',
       globals: {
         '@capacitor/core': 'capacitorExports',
       },
@@ -19,4 +19,4 @@ export default {
     },
   ],
   external: ['@capacitor/core'],
-};
+}; 

@@ -1,3 +1,64 @@
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# TypeScript
+*.tsbuildinfo
+.tscache/
+
+# Distribution
+dist/
+.tmp/
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Android
+android/build/
+android/app/build/
+android/gradle/
+android/gradlew
+android/gradlew.bat
+android/local.properties
+android/captures/
+android/*.iml
+
+# iOS
+ios/Plugin/build/
+ios/Plugin/Pods/
+ios/Plugin/App/build/
+ios/Plugin/App/Pods/
+ios/Plugin/App/App/build/
+ios/Plugin/App/App/Pods/
+ios/Plugin/DerivedData
+ios/Plugin/xcuserdata
+ios/Plugin/*.xcscmblueprint
+ios/Plugin/*.xccheckout
+ios/Plugin/*.xcodeproj/*
+!ios/Plugin/*.xcodeproj/project.pbxproj
+!ios/Plugin/*.xcodeproj/xcshareddata/
+!ios/Plugin/*.xcworkspace/contents.xcworkspacedata
+ios/Plugin/*.swp
+ios/Plugin/*.lock
+ios/Plugin/profile
+ios/Plugin/*.gcno
+*.xcuserdatad
+*.pbxuser
+xcuserdata/
+DerivedData/
+.idea/
+Pods/
+Podfile.lock
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
 # node files
 dist
 node_modules
@@ -16,11 +77,8 @@ DerivedData/
 .swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
 .netrc
 
-
 # macOS files
 .DS_Store
-
-
 
 # Based on Android gitignore template: https://github.com/github/gitignore/blob/HEAD/Android.gitignore
 
